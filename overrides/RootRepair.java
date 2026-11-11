@@ -119,7 +119,7 @@ public final class RootRepair {
                 + " >> " + q(log.getAbsolutePath()) + " 2>&1\n";
 
         try {
-            Files.writeString(script.toPath(), commands, StandardCharsets.UTF_8);
+            Files.write(script.toPath(), commands.getBytes(StandardCharsets.UTF_8));
             Files.deleteIfExists(status.toPath());
         } catch (Exception e) {
             Log.e(TAG, "Failed preparing root repair script", e);
@@ -163,7 +163,7 @@ public final class RootRepair {
     private static String read(File file) {
         try {
             if (!file.isFile()) return "";
-            String value = Files.readString(file.toPath(), StandardCharsets.UTF_8).trim();
+            String value = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8).trim();
             return value.length() <= 120 ? value : value.substring(0, 120);
         } catch (Exception e) {
             return "";
