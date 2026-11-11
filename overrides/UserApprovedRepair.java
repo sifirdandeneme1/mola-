@@ -56,6 +56,10 @@ public final class UserApprovedRepair {
 
         boolean started = activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
                 .getBoolean(KEY_STARTED, false);
+        // Opening the installer is NOT proof the installation succeeded.
+        // Avoid asking the user to reinstall again on every application launch.
+        // This diagnostic build tests the corrected Android Auto media manifest.
+        if (started) return;
         String source = installSourceReport(activity);
         String body = started
                 ? "Önceki denemede Android'in güncelleme ekranı açıldı.\n\n"
