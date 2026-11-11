@@ -181,8 +181,8 @@ def main():
     activity = "fermata/src/main/java/me/aap/fermata/ui/activity/MainActivity.java"
     insert_at(
         activity,
-        '\\t\\tsuper.onResume();',
-        '\\n\\t\\tif (!isCarActivity()) me.aap.fermata.root.RootRepair.offer(this);'
+        '\t\tsuper.onResume();',
+        '\n\t\tif (!isCarActivity()) me.aap.fermata.root.RootRepair.offer(this);'
     )
 
     print("Mola patched: 54 TV, 19 radio, Exo first, user-confirmed root reinstall repair")
