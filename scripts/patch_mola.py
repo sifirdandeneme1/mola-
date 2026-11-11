@@ -172,6 +172,19 @@ def main():
         '\t\t}'
     )
 
+    # Android Auto discovers media applications through the exported
+    # MediaBrowserService intent. The upstream auto flavor removed the base
+    # service but omitted the replacement browser intent, making Mola invisible
+    # even when the user-approved APK update completed successfully.
+    replace(
+        "fermata/src/auto/AndroidManifest.xml",
+        '            <!-- Explicit MediaBrowser connections retain playback without a second AA tile. -->\n',
+        '            <!-- Android Auto must discover this MediaBrowserService. -->\n'
+        '            <intent-filter>\n'
+        '                <action android:name="android.media.browse.MediaBrowserService" />\n'
+        '            </intent-filter>\n'
+    )
+
     # Android's own package installer requests explicit user consent and
     # provides the familiar "Güncelle" dialog; never forge Play Store identity.
     root_dir = UP / "fermata/src/main/java/me/aap/fermata/root"
