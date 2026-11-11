@@ -172,52 +172,20 @@ def main():
         '\t\t}'
     )
 
+    # The first two builds only checked 'su -c id' and therefore never ran
+    # the missing same-package installation repair step. Restore that flow.
     root_dir = UP / "fermata/src/main/java/me/aap/fermata/root"
     root_dir.mkdir(parents=True, exist_ok=True)
-    (root_dir / "RootBootstrap.java").write_text(
-        """package me.aap.fermata.root;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
-
-/** One-time, user-authorized su request on rooted personal devices. */
-public final class RootBootstrap {
-    private static final String TAG = "MolaRoot";
-    private static final String PREF = "mola_root_bootstrap";
-    private RootBootstrap() {}
-
-    public static void requestOnce(Context context) {
-        Context app = context.getApplicationContext();
-        SharedPreferences prefs = app.getSharedPreferences(PREF, Context.MODE_PRIVATE);
-        if (prefs.getBoolean("granted", false)) return;
-        new Thread(() -> {
-            try {
-                Process process = new ProcessBuilder("su", "-c", "id")
-                        .redirectErrorStream(true).start();
-                int code = process.waitFor();
-                if (code == 0) {
-                    prefs.edit().putBoolean("granted", true).apply();
-                    Log.i(TAG, "Root access granted");
-                } else {
-                    Log.w(TAG, "Root access not granted, code: " + code);
-                }
-            } catch (Exception e) {
-                Log.w(TAG, "su not available or root denied", e);
-            }
-        }, "MolaRootBootstrap").start();
-    }
-}
-""", encoding="utf-8"
-    )
+    shutil.copy2(ROOT / "overrides" / "RootRepair.java",
+                 root_dir / "RootRepair.java")
     activity = "fermata/src/main/java/me/aap/fermata/ui/activity/MainActivity.java"
     insert_at(
         activity,
-        '\t\tPhoneConnectionObservation.observe(this, this);',
-        '\n\t\tif (!isCarActivity()) me.aap.fermata.root.RootBootstrap.requestOnce(this);'
+        '\\t\\tsuper.onResume();',
+        '\\n\\t\\tif (!isCarActivity()) me.aap.fermata.root.RootRepair.offer(this);'
     )
 
-    print("Mola personalization patched: 54 TV, 19 radio, Exo first, root request on first launch")
+    print("Mola patched: 54 TV, 19 radio, Exo first, user-confirmed root reinstall repair")
 
 
 if __name__ == "__main__":
