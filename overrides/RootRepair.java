@@ -35,10 +35,10 @@ public final class RootRepair {
         String source = installSourceReport(activity);
         activity.getWindow().getDecorView().post(() -> {
             if (activity.isFinishing() || activity.isDestroyed()) return;
-            String message = "Android Auto kurulum tanısı\\n\\n"
-                    + source + "\\n\\n"
+            String message = "Android Auto kurulum tanısı\n\n"
+                    + source + "\n\n"
                     + "Son root işlemi: " + (result.isEmpty() ? "Henüz yok" : result)
-                    + "\\n\\n"
+                    + "\n\n"
                     + "Orijinal Mola'nın kurulum oturumuna benzeyen yöntemle "
                     + "APK'yı yeniden kurmayı denemek için aşağıya bas. "
                     + "Bu işlem dosyaları silmez, ancak uygulama kapanabilir.";
@@ -57,8 +57,8 @@ public final class RootRepair {
                 InstallSourceInfo info = activity.getPackageManager()
                         .getInstallSourceInfo(activity.getPackageName());
                 return "Kurulum kaynağı: " + value(info.getInstallingPackageName())
-                        + "\\nBaşlatan paket: " + value(info.getInitiatingPackageName())
-                        + "\\nKaynak paket: " + value(info.getOriginatingPackageName());
+                        + "\nBaşlatan paket: " + value(info.getInitiatingPackageName())
+                        + "\nKaynak paket: " + value(info.getOriginatingPackageName());
             }
             return "Kurulum kaynağı: " + value(activity.getPackageManager()
                     .getInstallerPackageName(activity.getPackageName()));
@@ -105,31 +105,31 @@ public final class RootRepair {
 
         // Build the original app's session-based installer sequence. Never log
         // the embedded IPTV playlist or use any playlist value as shell input.
-        String commands = "#!/system/bin/sh\\n"
-                + "apk=" + q(source.getAbsolutePath()) + "\\n"
-                + "status=" + q(status.getAbsolutePath()) + "\\n"
-                + "log=" + q(log.getAbsolutePath()) + "\\n"
-                + "pkg=" + q(packageName) + "\\n"
-                + "vending=com.android.vending\\n"
-                + "echo RUNNING > \"$status\"\\n"
-                + "if [ \"$(id -u)\" != 0 ]; then echo FAIL:root-not-granted > \"$status\"; exit 1; fi\\n"
-                + "size=$(stat -c %s \"$apk\")\\n"
-                + "if [ -z \"$size\" ]; then echo FAIL:cannot-read-apk > \"$status\"; exit 1; fi\\n"
+        String commands = "#!/system/bin/sh\n"
+                + "apk=" + q(source.getAbsolutePath()) + "\n"
+                + "status=" + q(status.getAbsolutePath()) + "\n"
+                + "log=" + q(log.getAbsolutePath()) + "\n"
+                + "pkg=" + q(packageName) + "\n"
+                + "vending=com.android.vending\n"
+                + "echo RUNNING > \"$status\"\n"
+                + "if [ \"$(id -u)\" != 0 ]; then echo FAIL:root-not-granted > \"$status\"; exit 1; fi\n"
+                + "size=$(stat -c %s \"$apk\")\n"
+                + "if [ -z \"$size\" ]; then echo FAIL:cannot-read-apk > \"$status\"; exit 1; fi\n"
                 + "session_info=$(pm install-create -r -i \"$vending\" -S \"$size\" "
                 + " --initiating-package \"$vending\" "
                 + " --originating-uri 'android-app://com.android.vending' "
-                + " --referrer 'android-app://com.android.vending' --install-reason 4 2>&1)\\n"
-                + "echo \"$session_info\" > \"$log\"\\n"
-                + "session=$(printf '%s\\\\n' \"$session_info\" | sed -n 's/.*\\\\[\\\\([0-9][0-9]*\\\\)\\\\].*/\\\\1/p')\\n"
-                + "if [ -z \"$session\" ]; then echo FAIL:session-create > \"$status\"; exit 1; fi\\n"
-                + "pm install-write -S \"$size\" \"$session\" base.apk \"$apk\" >> \"$log\" 2>&1\\n"
-                + "if [ $? -ne 0 ]; then pm install-abandon \"$session\"; echo FAIL:session-write > \"$status\"; exit 1; fi\\n"
-                + "pm install-commit \"$session\" >> \"$log\" 2>&1\\n"
-                + "if [ $? -ne 0 ]; then echo FAIL:session-commit > \"$status\"; exit 1; fi\\n"
-                + "cmd package set-installer \"$pkg\" \"$vending\" >> \"$log\" 2>&1 || true\\n"
-                + "echo SUCCESS > \"$status\"\\n"
-                + "sleep 2\\n"
-                + "am start -n \"$pkg/me.app.fermatax.auto.PhoneLauncherActivity\" >> \"$log\" 2>&1\\n";
+                + " --referrer 'android-app://com.android.vending' --install-reason 4 2>&1)\n"
+                + "echo \"$session_info\" > \"$log\"\n"
+                + "session=$(printf '%s\\\n' \"$session_info\" | sed -n 's/.*\\\\[\\\\([0-9][0-9]*\\\\)\\\\].*/\\\\1/p')\n"
+                + "if [ -z \"$session\" ]; then echo FAIL:session-create > \"$status\"; exit 1; fi\n"
+                + "pm install-write -S \"$size\" \"$session\" base.apk \"$apk\" >> \"$log\" 2>&1\n"
+                + "if [ $? -ne 0 ]; then pm install-abandon \"$session\"; echo FAIL:session-write > \"$status\"; exit 1; fi\n"
+                + "pm install-commit \"$session\" >> \"$log\" 2>&1\n"
+                + "if [ $? -ne 0 ]; then echo FAIL:session-commit > \"$status\"; exit 1; fi\n"
+                + "cmd package set-installer \"$pkg\" \"$vending\" >> \"$log\" 2>&1 || true\n"
+                + "echo SUCCESS > \"$status\"\n"
+                + "sleep 2\n"
+                + "am start -n \"$pkg/me.app.fermatax.auto.PhoneLauncherActivity\" >> \"$log\" 2>&1\n";
 
         try {
             Files.write(script.toPath(), commands.getBytes(StandardCharsets.UTF_8));
