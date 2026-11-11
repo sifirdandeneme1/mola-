@@ -1,0 +1,86 @@
+name: Mola Kisisel APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NO_GS: "true"
+    steps:
+      - name: Kisisel projeyi al
+        uses: actions/checkout@v4
+        with:
+          path: personal
+
+      - name: Mola GPL kaynaklarini al (2.2.2)
+        uses: actions/checkout@v4
+        with:
+          repository: moris545454/araba-
+          ref: 3f45ad3557a25822c2a3a9f152f32ef82f57e005
+          path: personal/upstream
+          persist-credentials: false
+
+      - name: JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: >-
+            platform-tools
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;29.0.14206865
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Kisisel degisiklikleri uygula
+        working-directory: personal
+        run: |
+          python3 scripts/patch_mola.py
+          test "$(grep -c '^#EXTINF' iptv/tv.m3u)" -eq 54
+          test "$(grep -c '^#EXTINF' iptv/radio.m3u)" -eq 19
+
+      - name: APK derle
+        working-directory: personal/upstream
+        run: |
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisisel --no-daemon --stacktrace --console=plain
+
+      - name: APK dosyasini bul ve imzayi dogrula
+        working-directory: personal/upstream
+        run: |
+          set -euo pipefail
+          mkdir -p ../../out
+          find fermata/build/outputs -type f -name '*universal.apk' -print
+          apk="$(find fermata/build/outputs -type f -name '*universal.apk' | head -n 1)"
+          test -n "$apk"
+          cp "$apk" ../../out/Mola-Kisisel-test.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-Kisisel-test.apk
+          (cd ../../out && sha256sum Mola-Kisisel-test.apk > sha256.txt)
+
+      - name: APK artifactini yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mola-Kisisel-test
+          path: out/
+          if-no-files-found: error
+
+      - name: Ozel depoda test surumunu yayinla
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd personal
+          tag="test-${GITHUB_SHA:0:8}"
+          gh release create "$tag" ../out/Mola-Kisisel-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Kisisel Test ${GITHUB_SHA:0:8}" --notes "54 TV, 19 radyo, ilk acilista su izin denemesi. Mola 2.2.2 GPL kaynaklari uzerinden derlenmistir; 4.1.10 kopyasi degildir."
