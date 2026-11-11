@@ -1,4 +1,4 @@
-name: Mola Kisisel APK
+name: Mola sadece TV ve Radyo APK
 on:
   push:
     branches: [main]
@@ -19,11 +19,11 @@ jobs:
         with:
           path: personal
 
-      - name: Mola GPL kaynaklarini al (3.0)
+      - name: Mola orijinal GitHub kaynaklarini al (2.2.2)
         uses: actions/checkout@v4
         with:
           repository: moris545454/araba-
-          ref: b48febd877ef4e476c16374df913b74296b6ffb9
+          ref: 3f45ad3557a25822c2a3a9f152f32ef82f57e005
           path: personal/upstream
           persist-credentials: false
 
@@ -48,7 +48,7 @@ jobs:
       - name: Kisisel degisiklikleri uygula
         working-directory: personal
         run: |
-          python3 scripts/patch_mola.py
+          python3 scripts/patch_media_only.py
           test "$(grep -c '^#EXTINF' iptv/tv.m3u)" -eq 54
           test "$(grep -c '^#EXTINF' iptv/radio.m3u)" -eq 19
 
@@ -57,27 +57,24 @@ jobs:
         run: |
           bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisisel --no-daemon --stacktrace --console=plain
 
-      - name: Android Auto medya servisinin birlesik manifestini dogrula
+      - name: Yalniz TV ve Radyo kaynaklarinin degistigini denetle
         working-directory: personal/upstream
         run: |
           python3 - <<'PY'
-          from pathlib import Path
-          base = Path("fermata/build/intermediates")
-          candidates = [f for f in base.rglob("AndroidManifest.xml")
-                        if "autoDebug" in str(f) and "merged_manifest" in str(f)]
-          if not candidates:
-              raise SystemExit("Android Auto merged manifest bulunamadi")
-          success = False
-          for manifest in candidates:
-              content = manifest.read_text(encoding="utf-8")
-              if ('me.app.fermatax.auto.AutoFermataMediaService' in content
-                      and 'android.media.browse.MediaBrowserService' in content
-                      and 'me.app.fermatax.auto.FullScreenAppService' in content):
-                  print("Android Auto servisleri bulundu:", manifest)
-                  success = True
-                  break
-          if not success:
-              raise SystemExit("Android Auto MediaBrowserService veya FullScreenAppService eksik")
+          import subprocess
+          changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
+          if not changed:
+              raise SystemExit("Kaynak degisiklikleri yok")
+          bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/"))]
+          if bad:
+              raise SystemExit("TV/radyo disinda kaynak degistirildi: " + str(bad))
+          new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], text=True).splitlines()
+          extra = [p for p in new if not p.startswith(("modules/tv/", "modules/radio/"))]
+          if extra:
+              raise SystemExit("TV/radyo disinda yeni kaynak var: " + str(extra))
+          print("Dogrulandi: TV ve radyo disindaki kaynak dosyalari orijinal")
+          print("Degisen dosyalar:", changed)
+          print("Yeni medya listeleri:", new)
           PY
 
       - name: APK dosyasini bul ve imzayi dogrula
@@ -88,14 +85,14 @@ jobs:
           find fermata/build/outputs -type f -name '*universal.apk' -print
           apk="$(find fermata/build/outputs -type f -name '*universal.apk' | head -n 1)"
           test -n "$apk"
-          cp "$apk" ../../out/Mola-Kisisel-test.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-Kisisel-test.apk
-          (cd ../../out && sha256sum Mola-Kisisel-test.apk > sha256.txt)
+          cp "$apk" ../../out/Mola-TV-Radyo-test.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-TV-Radyo-test.apk
+          (cd ../../out && sha256sum Mola-TV-Radyo-test.apk > sha256.txt)
 
       - name: APK artifactini yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Mola-Kisisel-test
+          name: Mola-TV-Radyo-test
           path: out/
           if-no-files-found: error
 
@@ -106,4 +103,4 @@ jobs:
           set -euo pipefail
           cd personal
           tag="test-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola-Kisisel-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Kisisel Test ${GITHUB_SHA:0:8}" --notes "54 TV, 19 radyo, ilk acilista su izin denemesi. Mola 3.0 GPL kaynaklari, FullScreenAppService ile derlenmistir; 4.1.10 kopyasi degildir."
+          gh release create "$tag" ../out/Mola-TV-Radyo-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola TV Radyo Kaynak Testi ${GITHUB_SHA:0:8}" --notes "Yalniz 54 TV ve 19 radyo kaynaklari degistirildi. Android Auto, root, oynatici ve kurulum kaynaklari aynen korundu. Orijinal GitHub v4.1.10 etiketi 2.2.2 kaynak commitine isaret eder; bu derleme 4.1.10 APKsinin aynisi degildir."
