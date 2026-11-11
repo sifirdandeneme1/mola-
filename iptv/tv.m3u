@@ -1,0 +1,109 @@
+#EXTM3U
+#EXTINF:-1 group-title="Ulusal" tvg-name="TRT 1",TRT 1
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/2
+#EXTINF:-1 group-title="Ulusal" tvg-name="ATV",ATV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/8
+#EXTINF:-1 group-title="Ulusal" tvg-name="Show TV",Show TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/10
+#EXTINF:-1 group-title="Ulusal" tvg-name="Star TV",Star TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/6
+#EXTINF:-1 group-title="Ulusal" tvg-name="Kanal D",Kanal D
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/4
+#EXTINF:-1 group-title="Ulusal" tvg-name="NOW",NOW
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/12
+#EXTINF:-1 group-title="Ulusal" tvg-name="TV8",TV8
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/14
+#EXTINF:-1 group-title="Ulusal" tvg-name="TV8.5",TV8.5
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/16
+#EXTINF:-1 group-title="Ulusal" tvg-name="Kanal 7",Kanal 7
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/27
+#EXTINF:-1 group-title="Ulusal" tvg-name="Beyaz TV",Beyaz TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/23
+#EXTINF:-1 group-title="Ulusal" tvg-name="Teve2",Teve2
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/29
+#EXTINF:-1 group-title="Ulusal" tvg-name="360",360
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/19
+#EXTINF:-1 group-title="Ulusal" tvg-name="a2",a2
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/21
+#EXTINF:-1 group-title="Ulusal" tvg-name="TRT 2",TRT 2
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/34
+#EXTINF:-1 group-title="Haber" tvg-name="TRT Haber",TRT Haber
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/94
+#EXTINF:-1 group-title="Haber" tvg-name="CNN Türk",CNN Türk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/79
+#EXTINF:-1 group-title="Haber" tvg-name="NTV",NTV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/88
+#EXTINF:-1 group-title="Haber" tvg-name="Habertürk",Habertürk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/83
+#EXTINF:-1 group-title="Haber" tvg-name="Haber Global",Haber Global
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/82
+#EXTINF:-1 group-title="Haber" tvg-name="TV100",TV100
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/769637
+#EXTINF:-1 group-title="Haber" tvg-name="Halk TV",Halk TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/85
+#EXTINF:-1 group-title="Haber" tvg-name="Sözcü TV",Sözcü TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/90
+#EXTINF:-1 group-title="Haber" tvg-name="Bloomberg HT",Bloomberg HT
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/77
+#EXTINF:-1 group-title="Haber" tvg-name="TGRT Haber",TGRT Haber
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/93
+#EXTINF:-1 group-title="Haber" tvg-name="A Haber",A Haber
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/72
+#EXTINF:-1 group-title="Haber" tvg-name="TELE1",TELE1
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/92
+#EXTINF:-1 group-title="Haber" tvg-name="KRT TV",KRT TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/87
+#EXTINF:-1 group-title="Haber" tvg-name="Ülke TV",Ülke TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/98
+#EXTINF:-1 group-title="Haber" tvg-name="24 TV",24 TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/70
+#EXTINF:-1 group-title="Haber" tvg-name="Flash Haber",Flash Haber
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/25
+#EXTINF:-1 group-title="Haber" tvg-name="CNBC-e",CNBC-e
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/181
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports Haber",beIN Sports Haber
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/221
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports 1",beIN Sports 1
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/225
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports 2",beIN Sports 2
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/231
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports 3",beIN Sports 3
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/234
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports 4",beIN Sports 4
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/237
+#EXTINF:-1 group-title="Spor" tvg-name="beIN Sports 5",beIN Sports 5
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/240
+#EXTINF:-1 group-title="Spor" tvg-name="TRT Spor",TRT Spor
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/281
+#EXTINF:-1 group-title="Spor" tvg-name="A Spor",A Spor
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/278
+#EXTINF:-1 group-title="Spor" tvg-name="HT Spor",HT Spor
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/513441
+#EXTINF:-1 group-title="Belgesel" tvg-name="GZT TV",GZT TV
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/526530
+#EXTINF:-1 group-title="Belgesel" tvg-name="TRT Belgesel",TRT Belgesel
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/111
+#EXTINF:-1 group-title="Belgesel" tvg-name="National Geographic",National Geographic
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/107
+#EXTINF:-1 group-title="Belgesel" tvg-name="National Geographic Wild",National Geographic Wild
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/108
+#EXTINF:-1 group-title="Belgesel" tvg-name="beIN İz",beIN İz
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/192
+#EXTINF:-1 group-title="Belgesel" tvg-name="DMAX",DMAX
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/104
+#EXTINF:-1 group-title="Belgesel" tvg-name="TLC",TLC
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/110
+#EXTINF:-1 group-title="Çocuk" tvg-name="TRT Çocuk",TRT Çocuk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/124
+#EXTINF:-1 group-title="Çocuk" tvg-name="TRT Diyanet Çocuk",TRT Diyanet Çocuk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/125
+#EXTINF:-1 group-title="Çocuk" tvg-name="Minika Çocuk",Minika Çocuk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/120
+#EXTINF:-1 group-title="Çocuk" tvg-name="Minika Go",Minika Go
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/121
+#EXTINF:-1 group-title="Çocuk" tvg-name="Cartoon Network",Cartoon Network
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/115
+#EXTINF:-1 group-title="Çocuk" tvg-name="Smart Çocuk",Smart Çocuk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1129
+#EXTINF:-1 group-title="Çocuk" tvg-name="Tabii Çocuk",Tabii Çocuk
+http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/581896
