@@ -61,8 +61,8 @@ def main():
     replace(
         tv_root,
         '\t\ttry {\n\t\t\tsources.seedDefaultRadioPlaylist(id -> new TvM3uFile(fs.toRid(id)).getUrl(), () ->\n'
-        '\t\t\t\tfs.toId(fs.newDefaultSource(TvSourceRepository.DEFAULT_RADIO_URL,\n'
-        '\t\t\t\t\t\tgetLib().getContext().getString(R.string.default_turkish_radios)).getRid()));\n'
+        '\t\t\t\t\tfs.toId(fs.newDefaultSource(TvSourceRepository.DEFAULT_RADIO_URL,\n'
+        '\t\t\t\t\t\t\tgetLib().getContext().getString(R.string.default_turkish_radios)).getRid()));\n'
         '\t\t} catch (RuntimeException failure) {\n'
         '\t\t\tLog.e(failure, "Failed to register the default radio list");\n'
         '\t\t}\n',
