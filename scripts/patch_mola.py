@@ -172,20 +172,20 @@ def main():
         '\t\t}'
     )
 
-    # The first two builds only checked 'su -c id' and therefore never ran
-    # the missing same-package installation repair step. Restore that flow.
+    # Android's own package installer requests explicit user consent and
+    # provides the familiar "Güncelle" dialog; never forge Play Store identity.
     root_dir = UP / "fermata/src/main/java/me/aap/fermata/root"
     root_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(ROOT / "overrides" / "RootRepair.java",
-                 root_dir / "RootRepair.java")
+    shutil.copy2(ROOT / "overrides" / "UserApprovedRepair.java",
+                 root_dir / "UserApprovedRepair.java")
     activity = "fermata/src/main/java/me/aap/fermata/ui/activity/MainActivity.java"
     insert_at(
         activity,
         '\t\tsuper.onResume();',
-        '\n\t\tif (!isCarActivity()) me.aap.fermata.root.RootRepair.offer(this);'
+        '\n\t\tif (!isCarActivity()) me.aap.fermata.root.UserApprovedRepair.offer(this);'
     )
 
-    print("Mola patched: 54 TV, 19 radio, Exo first, user-confirmed root reinstall repair")
+    print("Mola patched: 54 TV, 19 radio, Exo first, system user-approved update repair")
 
 
 if __name__ == "__main__":
