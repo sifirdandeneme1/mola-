@@ -57,6 +57,29 @@ jobs:
         run: |
           bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisisel --no-daemon --stacktrace --console=plain
 
+      - name: Android Auto medya servisinin birlesik manifestini dogrula
+        working-directory: personal/upstream
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          base = Path("fermata/build/intermediates")
+          candidates = [f for f in base.rglob("AndroidManifest.xml")
+                        if "autoDebug" in str(f) and "merged_manifest" in str(f)]
+          if not candidates:
+              raise SystemExit("Android Auto merged manifest bulunamadi")
+          success = False
+          for manifest in candidates:
+              content = manifest.read_text(encoding="utf-8")
+              if ('me.app.fermatax.auto.AutoFermataMediaService' in content
+                      and 'android.media.browse.MediaBrowserService' in content
+                      and 'me.app.fermatax.auto.FullScreenAppService' in content):
+                  print("Android Auto servisleri bulundu:", manifest)
+                  success = True
+                  break
+          if not success:
+              raise SystemExit("Android Auto MediaBrowserService veya FullScreenAppService eksik")
+          PY
+
       - name: APK dosyasini bul ve imzayi dogrula
         working-directory: personal/upstream
         run: |
