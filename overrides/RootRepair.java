@@ -30,38 +30,45 @@ public final class RootRepair {
     public static void offer(Activity activity) {
         if (prompted || activity.isFinishing() || activity.isDestroyed()) return;
         prompted = true;
-
-        if (hasPlayInstaller(activity)) return;
-
         File status = new File(activity.getFilesDir(), STATUS);
         String result = read(status);
-        if ("SUCCESS".equals(result)) {
-            // The install shell completed, but the OS still reports another
-            // installer. Do not silently retry in a loop.
-            message(activity, "Kurulum kontrolü",
-                    "Root ile yeniden kurulum tamamlandı; ancak Android henüz Play Store "
-                    + "kaynağını doğrulamıyor. Android Auto'yu yeniden bağlayın ve "
-                    + "Başlatıcıyı özelleştir bölümünü kontrol edin.");
-            return;
-        }
-
-        final String heading = result.startsWith("FAIL:")
-                ? "Android Auto onarımı yeniden dene" : "Android Auto kurulum onarımı";
+        String source = installSourceReport(activity);
         activity.getWindow().getDecorView().post(() -> {
             if (activity.isFinishing() || activity.isDestroyed()) return;
+            String message = "Android Auto kurulum tanısı\\n\\n"
+                    + source + "\\n\\n"
+                    + "Son root işlemi: " + (result.isEmpty() ? "Henüz yok" : result)
+                    + "\\n\\n"
+                    + "Orijinal Mola'nın kurulum oturumuna benzeyen yöntemle "
+                    + "APK'yı yeniden kurmayı denemek için aşağıya bas. "
+                    + "Bu işlem dosyaları silmez, ancak uygulama kapanabilir.";
             new AlertDialog.Builder(activity)
-                    .setTitle(heading)
-                    .setMessage("Android Auto uygulama listesinde Mola görünmüyor olabilir. "
-                            + "Orijinal Mola'nın yaptığı gibi mevcut uygulamanın aynı APK'sını "
-                            + "root izniyle yeniden kurabiliriz. TV, radyo ve ayarlar korunur. "
-                            + "Magisk'in root onayı istenir.\n\n"
-                            + (result.startsWith("FAIL:") ? "Önceki deneme: "
-                                + result.substring(5) + "\n\n" : "")
-                            + "Onarım sırasında uygulama kapanıp yeniden açılabilir.")
-                    .setPositiveButton("Root ile onar", (d, which) -> perform(activity))
-                    .setNegativeButton("Şimdi değil", (d, which) -> { })
+                    .setTitle("Mola Android Auto onarımı")
+                    .setMessage(message)
+                    .setPositiveButton("Root oturumu ile onar", (dialog, ignored) -> perform(activity))
+                    .setNegativeButton("Şimdi değil", (dialog, ignored) -> { })
                     .show();
         });
+    }
+
+    private static String installSourceReport(Activity activity) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                InstallSourceInfo info = activity.getPackageManager()
+                        .getInstallSourceInfo(activity.getPackageName());
+                return "Kurulum kaynağı: " + value(info.getInstallingPackageName())
+                        + "\\nBaşlatan paket: " + value(info.getInitiatingPackageName())
+                        + "\\nKaynak paket: " + value(info.getOriginatingPackageName());
+            }
+            return "Kurulum kaynağı: " + value(activity.getPackageManager()
+                    .getInstallerPackageName(activity.getPackageName()));
+        } catch (Exception e) {
+            return "Kurulum kaynağı okunamadı: " + e.getClass().getSimpleName();
+        }
+    }
+
+    private static String value(String input) {
+        return (input == null || input.isEmpty()) ? "(belirtilmemiş)" : input;
     }
 
     private static boolean hasPlayInstaller(Activity activity) {
@@ -96,27 +103,33 @@ public final class RootRepair {
         File script = new File(files, "mola_root_repair.sh");
         String packageName = activity.getPackageName();
 
-        // All shell values are single-quote escaped. No playlist URLs or
-        // IPTV account details are passed to a shell or written into logs.
-        String commands =
-                "#!/system/bin/sh\n"
-                + "if [ \"$(id -u)\" != 0 ]; then echo 'FAIL:root denied' > "
-                + q(status.getAbsolutePath()) + "; exit 31; fi\n"
-                + "echo 'RUNNING' > " + q(status.getAbsolutePath()) + "\n"
-                + "pm install -r -i " + VENDING + " " + q(source.getAbsolutePath())
-                + " > " + q(log.getAbsolutePath()) + " 2>&1\n"
-                + "code=$?\n"
-                + "if [ \"$code\" -ne 0 ]; then\n"
-                + "  echo \"FAIL:pm install exit $code\" > "
-                + q(status.getAbsolutePath()) + "\n"
-                + "  exit \"$code\"\n"
-                + "fi\n"
-                + "cmd package set-installer " + q(packageName) + " " + VENDING
-                + " >> " + q(log.getAbsolutePath()) + " 2>&1 || true\n"
-                + "echo 'SUCCESS' > " + q(status.getAbsolutePath()) + "\n"
-                + "sleep 2\n"
-                + "am start -n " + q(packageName + "/me.app.fermatax.auto.PhoneLauncherActivity")
-                + " >> " + q(log.getAbsolutePath()) + " 2>&1\n";
+        // Build the original app's session-based installer sequence. Never log
+        // the embedded IPTV playlist or use any playlist value as shell input.
+        String commands = "#!/system/bin/sh\\n"
+                + "apk=" + q(source.getAbsolutePath()) + "\\n"
+                + "status=" + q(status.getAbsolutePath()) + "\\n"
+                + "log=" + q(log.getAbsolutePath()) + "\\n"
+                + "pkg=" + q(packageName) + "\\n"
+                + "vending=com.android.vending\\n"
+                + "echo RUNNING > \"$status\"\\n"
+                + "if [ \"$(id -u)\" != 0 ]; then echo FAIL:root-not-granted > \"$status\"; exit 1; fi\\n"
+                + "size=$(stat -c %s \"$apk\")\\n"
+                + "if [ -z \"$size\" ]; then echo FAIL:cannot-read-apk > \"$status\"; exit 1; fi\\n"
+                + "session_info=$(pm install-create -r -i \"$vending\" -S \"$size\" "
+                + " --initiating-package \"$vending\" "
+                + " --originating-uri 'android-app://com.android.vending' "
+                + " --referrer 'android-app://com.android.vending' --install-reason 4 2>&1)\\n"
+                + "echo \"$session_info\" > \"$log\"\\n"
+                + "session=$(printf '%s\\\\n' \"$session_info\" | sed -n 's/.*\\\\[\\\\([0-9][0-9]*\\\\)\\\\].*/\\\\1/p')\\n"
+                + "if [ -z \"$session\" ]; then echo FAIL:session-create > \"$status\"; exit 1; fi\\n"
+                + "pm install-write -S \"$size\" \"$session\" base.apk \"$apk\" >> \"$log\" 2>&1\\n"
+                + "if [ $? -ne 0 ]; then pm install-abandon \"$session\"; echo FAIL:session-write > \"$status\"; exit 1; fi\\n"
+                + "pm install-commit \"$session\" >> \"$log\" 2>&1\\n"
+                + "if [ $? -ne 0 ]; then echo FAIL:session-commit > \"$status\"; exit 1; fi\\n"
+                + "cmd package set-installer \"$pkg\" \"$vending\" >> \"$log\" 2>&1 || true\\n"
+                + "echo SUCCESS > \"$status\"\\n"
+                + "sleep 2\\n"
+                + "am start -n \"$pkg/me.app.fermatax.auto.PhoneLauncherActivity\" >> \"$log\" 2>&1\\n";
 
         try {
             Files.write(script.toPath(), commands.getBytes(StandardCharsets.UTF_8));
@@ -129,31 +142,25 @@ public final class RootRepair {
 
         Toast.makeText(activity, "Magisk root iznini onaylayın.", Toast.LENGTH_LONG).show();
         new Thread(() -> {
-            int result = -1;
             try {
-                Process process = new ProcessBuilder("su", "-c", "sh " + q(script.getAbsolutePath()))
+                // Reinstallation can kill our own Android process. The root
+                // script must continue detached from this app process.
+                String command = "sh " + q(script.getAbsolutePath())
+                        + " </dev/null >/dev/null 2>&1 &";
+                Process process = new ProcessBuilder("su", "-c", command)
                         .redirectErrorStream(true).start();
-                result = process.waitFor();
-                Log.i(TAG, "Root installer exit: " + result);
+                int result = process.waitFor();
+                Log.i(TAG, "Detached root installer launched: " + result);
+                if (result != 0) {
+                    activity.runOnUiThread(() -> message(activity, "Onarım başlatılamadı",
+                            "Magisk root işlemi başlatılamadı. Çıkış kodu: " + result));
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Root installer failed to start", e);
+                activity.runOnUiThread(() -> message(activity, "Onarım başlatılamadı",
+                        "Magisk root iznini ve komut çalıştırmayı kontrol et."));
             }
-            int code = result;
-            activity.runOnUiThread(() -> {
-                if (activity.isFinishing() || activity.isDestroyed()) return;
-                String current = read(status);
-                if (code == 0 && "SUCCESS".equals(current)) {
-                    message(activity, "Onarım tamamlandı",
-                            "Uygulama root üzerinden yeniden kuruldu. Android Auto'yu "
-                            + "yeniden bağlayın ve Başlatıcıyı özelleştir bölümünü kontrol edin.");
-                } else {
-                    message(activity, "Onarım başarısız",
-                            "Yeniden kurulum tamamlanamadı. Root iznini ve Android "
-                            + "kurulum kısıtlamalarını kontrol edin. Hata: "
-                            + (current.isEmpty() ? "root/kurulum işlemi, kod " + code : current));
-                }
-            });
-        }, "Mola-Root-Reinstall").start();
+        }, "Mola-Root-Session-Installer").start();
     }
 
     private static String q(String value) {
