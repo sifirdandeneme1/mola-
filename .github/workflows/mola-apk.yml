@@ -19,11 +19,11 @@ jobs:
         with:
           path: personal
 
-      - name: Mola GPL kaynaklarini al (2.2.2)
+      - name: Mola GPL kaynaklarini al (3.0)
         uses: actions/checkout@v4
         with:
           repository: moris545454/araba-
-          ref: 3f45ad3557a25822c2a3a9f152f32ef82f57e005
+          ref: b48febd877ef4e476c16374df913b74296b6ffb9
           path: personal/upstream
           persist-credentials: false
 
@@ -83,4 +83,4 @@ jobs:
           set -euo pipefail
           cd personal
           tag="test-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola-Kisisel-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Kisisel Test ${GITHUB_SHA:0:8}" --notes "54 TV, 19 radyo, ilk acilista su izin denemesi. Mola 2.2.2 GPL kaynaklari uzerinden derlenmistir; 4.1.10 kopyasi degildir."
+          gh release create "$tag" ../out/Mola-Kisisel-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Kisisel Test ${GITHUB_SHA:0:8}" --notes "54 TV, 19 radyo, ilk acilista su izin denemesi. Mola 3.0 GPL kaynaklari, FullScreenAppService ile derlenmistir; 4.1.10 kopyasi degildir."
