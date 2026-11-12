@@ -182,7 +182,15 @@ def main():
         "\t\taddVoiceButton(nb);",
         "\t\t// Hide the optional voice-control shortcut in the personal three-item UI.", 2)
 
-    print("Personal Mola: 54 TV, 19 radio, YouTube; only three dashboard destinations; AA services untouched")
+
+    # TV-only Back: stop stream and show the current channel list on first Back.
+    # Radio and YouTube navigation remain unchanged.
+    tv_fragment = "modules/tv/src/main/java/me/aap/fermata/addon/tv/TvFragment.java"
+    replace(tv_fragment,
+        "\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {",
+        "\t@Override\n\tpublic boolean onBackPressed() {\n\t\tMainActivityDelegate activity = getMainActivity();\n\t\tvar body = activity.getBody();\n\t\tif (body.isVideoMode() || body.isBothMode()) {\n\t\t\t// First Back exits TV playback entirely, not just fullscreen/split mode.\n\t\t\t// Keep the current TV category selected, so the next Back navigates normally.\n\t\t\tactivity.getMediaSessionCallback().onStop();\n\t\t\tbody.setMode(me.aap.fermata.ui.view.BodyLayout.Mode.FRAME);\n\t\t\treturn true;\n\t\t}\n\t\treturn super.onBackPressed();\n\t}\n\n\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {")
+
+    print("Personal Mola: TV Back now stops stream and returns to category list; radio and YouTube untouched")
 
 
 if __name__ == "__main__":
