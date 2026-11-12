@@ -215,7 +215,96 @@ def main():
         '        android:visibility="gone"'
     )
 
-    print("Personal Mola: 3 equal hero cards, clean phone header, TV Back retained; no logo or YouTube Music changes")
+
+    # Android Auto video output: the video Surface is the decoder's required
+    # output. The optional subtitle Surface must not tear down the decoder.
+    video_view = "fermata/src/main/java/me/aap/fermata/ui/view/VideoView.java"
+    replace(
+        video_view,
+        "private FutureSupplier<?> createSurface = new Promise<>();",
+        "private FutureSupplier<?> createSurface = new Promise<>();\n"
+        "\tprivate long videoSurfaceRegistrationGeneration;"
+    )
+    old_callbacks = (
+        "\t@Override\n"
+        "\tpublic void surfaceCreated(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\tif ((video == null) || !video.getHolder().getSurface().isValid()) return;\n"
+        "\t\tSurfaceView s = getSubtitleSurface();\n"
+        "\t\tif ((s != null) && !s.getHolder().getSurface().isValid()) return;\n"
+        "\t\tgetActivity().onSuccess(a -> {\n"
+        "\t\t\tvar host = a.isCarActivityNotMirror() ?\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION :\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.PHONE;\n"
+        "\t\t\tlong lease = (host == me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION) ?\n"
+        "\t\t\t\t\tme.aap.fermata.auto.AutomotiveNavigationController.get().captureSourceToken(0)\n"
+        "\t\t\t\t\t\t\t.registrationGeneration() : Long.MIN_VALUE;\n"
+        "\t\t\ta.getMediaSessionCallback().getVideoOutputCoordinator().add(this,\n"
+        "\t\t\t\t\ta.isCarActivityNotMirror() ? 0 : 1, host, lease);\n"
+        "\t\t});\n"
+        "\t\tif (createSurface instanceof Promise<?> p) {\n"
+        "\t\t\tcreateSurface = completedNull();\n"
+        "\t\t\tp.complete(null);\n"
+        "\t\t}\n"
+        "\t}\n\n"
+        "\t@Override\n"
+        "\tpublic void surfaceDestroyed(@NonNull SurfaceHolder holder) {\n"
+        "\t\tinvalidateRenderMetadata();\n"
+        "\t\tsetVideoSourceLease(null);\n"
+        "\t\tcreateSurface = new Promise<>();\n"
+        "\t\tgetActivity().onSuccess(a -> a.getMediaSessionCallback().removeVideoView(this));\n"
+        "\t}\n"
+    )
+    new_callbacks = (
+        "\t@Override\n"
+        "\tpublic void surfaceCreated(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\t// Subtitle surface callbacks do not own the decoder's video output.\n"
+        "\t\tif ((video == null) || (holder != video.getHolder()) ||\n"
+        "\t\t\t\t!holder.getSurface().isValid()) return;\n"
+        "\t\tlong generation = ++videoSurfaceRegistrationGeneration;\n"
+        "\t\tgetActivity().onSuccess(a -> {\n"
+        "\t\t\t// Ignore delayed registration from an already destroyed Surface.\n"
+        "\t\t\tif ((generation != videoSurfaceRegistrationGeneration) ||\n"
+        "\t\t\t\t\t!holder.getSurface().isValid()) return;\n"
+        "\t\t\tvar host = a.isCarActivityNotMirror() ?\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION :\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.PHONE;\n"
+        "\t\t\tlong lease = (host == me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION) ?\n"
+        "\t\t\t\t\tme.aap.fermata.auto.AutomotiveNavigationController.get().captureSourceToken(0)\n"
+        "\t\t\t\t\t\t\t.registrationGeneration() : Long.MIN_VALUE;\n"
+        "\t\t\ta.getMediaSessionCallback().getVideoOutputCoordinator().add(this,\n"
+        "\t\t\t\t\ta.isCarActivityNotMirror() ? 0 : 1, host, lease);\n"
+        "\t\t\t// Publish readiness only after the output is registered.\n"
+        "\t\t\tif (createSurface instanceof Promise<?> p) {\n"
+        "\t\t\t\tcreateSurface = completedNull();\n"
+        "\t\t\t\tp.complete(null);\n"
+        "\t\t\t}\n"
+        "\t\t});\n"
+        "\t}\n\n"
+        "\t@Override\n"
+        "\tpublic void surfaceDestroyed(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\tif ((video == null) || (holder != video.getHolder())) return;\n"
+        "\t\t++videoSurfaceRegistrationGeneration;\n"
+        "\t\tinvalidateRenderMetadata();\n"
+        "\t\tsetVideoSourceLease(null);\n"
+        "\t\tcreateSurface = new Promise<>();\n"
+        "\t\tgetActivity().onSuccess(a -> a.getMediaSessionCallback().removeVideoView(this));\n"
+        "\t}\n"
+    )
+    replace(video_view, old_callbacks, new_callbacks)
+
+    # VLC must not attach an optional subtitle holder which is not ready.
+    vlc_engine = "modules/vlc/src/main/java/me/aap/fermata/engine/vlc/VlcEngine.java"
+    replace(
+        vlc_engine,
+        "if (nativeSubtitles && (subtitleSurface != null)) {",
+        "if (nativeSubtitles && (subtitleSurface != null) &&\n"
+        "\t\t\t\t\tsubtitleSurface.getHolder().getSurface().isValid()) {"
+    )
+
+    print("Personal Mola: isolated video Surface lifecycle fix; standard TV and radio preserved")
 
 
 if __name__ == "__main__":
