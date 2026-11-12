@@ -304,7 +304,111 @@ def main():
         "\t\t\t\t\tsubtitleSurface.getHolder().getSurface().isValid()) {"
     )
 
-    print("Personal Mola: isolated video Surface lifecycle fix; standard TV and radio preserved")
+
+    # Recover the *same* Android Auto host after Activity pause/resume.
+    # Registration generations advance on each navigator register/unregister,
+    # but the VideoView Surface may remain alive. Refresh its lease so active
+    # playback and subsequent channel selections are not permanently rejected.
+    routing = "fermata/src/main/java/me/aap/fermata/auto/OpenOnCarMediaRouting.java"
+    replace(
+        routing,
+        "public boolean commit() { return committed = isCurrent(); }",
+        "public boolean commit() { return committed = isCurrent(); }\n"
+        "\t\tpublic boolean isCommitted() { return committed; }"
+    )
+    coordinator = "fermata/src/main/java/me/aap/fermata/media/service/VideoOutputCoordinator.java"
+    insert_at(
+        coordinator,
+        "\tpublic RuntimeHostMode getHost() { return requestedHost; }\n",
+        """
+    /**
+     * Refresh only a registered Surface belonging to the resumed car activity.
+     * A committed playback owner survives a transient host registration change.
+     * Pending, uncommitted requests remain rejected and must not be revived.
+     */
+    public void restoreProjectedHost(VideoView sameActivityView) {
+        var navigation = me.aap.fermata.auto.AutomotiveNavigationController.get();
+        if (!navigation.getOpenOnCarMode().isAvailable()) return;
+        long lease = navigation.captureSourceToken(0).registrationGeneration();
+        restoreProjectedHost(sameActivityView, lease,
+                () -> navigation.getOpenOnCarMode().isAvailable() &&
+                        navigation.captureSourceToken(0).registrationGeneration() == lease);
+    }
+
+    void restoreProjectedHost(VideoView sameActivityView, long lease,
+                              java.util.function.BooleanSupplier current) {
+        if (requestedHost != RuntimeHostMode.AA_PROJECTION) return;
+        int index = -1;
+        for (int i = 0; i < targets.size(); i++) {
+            Registration target = targets.get(i);
+            if ((target.view == sameActivityView) && (target.host == RuntimeHostMode.AA_PROJECTION)) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) return;
+        // Do not revive a request that was invalidated before playback committed.
+        if ((admission != null) && !admission.isCurrent()) {
+            if (!admission.isCommitted()) return;
+            admission = null;
+        }
+        Registration old = targets.get(index);
+        targets.set(index, new Registration(old.view, old.priority, old.order, old.host, lease));
+        requestedHostLease = lease;
+        hostCurrent = current;
+        reconcile();
+    }
+"""
+    )
+
+    car_activity = "fermata/src/auto/java/me/app/fermatax/auto/MainCarActivity.java"
+    replace(
+        car_activity,
+        "\t\tdelegateResumed = true;\n\t\td.onActivityResume();\n\t}",
+        "\t\tdelegateResumed = true;\n\t\td.onActivityResume();\n"
+        "\t\t// Rebind the active car host token even if Android preserved the Surface.\n"
+        "\t\tvar body = d.getBody();\n"
+        "\t\tif (body != null) d.getMediaSessionCallback().getVideoOutputCoordinator()\n"
+        "\t\t\t\t.restoreProjectedHost(body.getVideoView());\n"
+        "\t}"
+    )
+
+    tests = "fermata/src/test/java/me/aap/fermata/media/service/VideoOutputCoordinatorTest.java"
+    insert_at(
+        tests,
+        "public class VideoOutputCoordinatorTest {\n",
+        """
+    @Test public void retainedCarSurfaceCanRenewItsRegistrationLease() throws Exception {
+        var coordinator = new VideoOutputCoordinator();
+        var car = view();
+        var previous = view();
+        var bindings = new ArrayList<VideoView>();
+        var engine = videoEngine(bindings);
+        coordinator.add(car, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.add(previous, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 7L);
+        coordinator.bind(engine, true);
+        assertSame(car, coordinator.getSelected());
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 8L);
+        assertNull(coordinator.getSelected());
+        coordinator.restoreProjectedHost(car, 8L, () -> true);
+        assertSame(car, coordinator.getSelected());
+        assertTrue(coordinator.isBound(engine));
+        assertEquals(Arrays.asList(car, null, car), bindings);
+    }
+
+    @Test public void differentCarSurfaceCannotRenewStaleRegistration() throws Exception {
+        var coordinator = new VideoOutputCoordinator();
+        var old = view();
+        coordinator.add(old, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 8L);
+        coordinator.restoreProjectedHost(view(), 8L, () -> true);
+        assertNull(coordinator.getSelected());
+    }
+"""
+    )
+
+    print("Personal Mola: Android Auto video surface and resumed host registration fixed")
 
 
 if __name__ == "__main__":
