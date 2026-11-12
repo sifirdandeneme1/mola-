@@ -215,7 +215,59 @@ def main():
         '        android:visibility="gone"'
     )
 
-    print("Personal Mola: 3 equal hero cards, clean phone header, TV Back retained; no logo or YouTube Music changes")
+
+    # Personal radio artwork: unpack the user-supplied 19-image ZIP into
+    # the base app so radio drawable IDs exist during the Gradle build.
+    import zipfile
+    archive = ROOT / "assets" / "radio_logos.zip"
+    logo_names = [
+        "kral_fm", "kral_pop", "power_turk_fm", "powerturk_slow",
+        "super_fm", "best_fm", "joyturk", "joy_fm", "alem_fm",
+        "show_radyo", "radyo_7", "radyo_d", "ntv_radyo", "radyo_spor",
+        "slow_turk", "kafa_radyo", "number_one_turk", "radyo_voyage",
+        "radyo_eksen",
+    ]
+    if not archive.is_file():
+        raise FileNotFoundError("Upload assets/radio_logos.zip to the radio-logo branch first")
+    target = UP / "fermata/src/main/res/drawable-nodpi"
+    target.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive) as z:
+        for name in logo_names:
+            filename = name + ".png"
+            if filename not in z.namelist():
+                raise RuntimeError("Radio logo missing from archive: " + filename)
+            data = z.read(filename)
+            if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+                raise RuntimeError("Not a PNG: " + filename)
+            (target / ("mola_" + filename)).write_bytes(data)
+
+    # RadioSourceItem is what our personally seeded 19 stations use.
+    radio_item = "modules/radio/src/main/java/me/aap/fermata/addon/radio/RadioSourceItem.java"
+    mapping = "\n".join(
+        f'\t\t\tcase "mola-{index}" -> me.aap.fermata.R.drawable.mola_{name};'
+        for index, name in enumerate(logo_names, 1)
+    )
+    replace(
+        radio_item,
+        '\tpublic int getIcon() {\n\t\treturn me.aap.fermata.R.drawable.radio;\n\t}',
+        '\tpublic int getIcon() {\n\t\treturn switch (getSource().getId()) {\n'
+        + mapping + '\n\t\t\tdefault -> me.aap.fermata.R.drawable.radio;\n\t\t};\n\t}'
+    )
+
+    # The normal media-item view tints monochrome icons. Full-color station
+    # logos must retain their original colors.
+    media_view = "fermata/src/main/java/me/aap/fermata/ui/view/MediaItemView.java"
+    needle = 'icon.setImageTintList(iconTint);'
+    view_text = (UP / media_view).read_text(encoding="utf-8")
+    if view_text.count(needle) != 4:
+        raise RuntimeError("Unexpected MediaItemView icon tint code")
+    view_text = view_text.replace(
+        needle,
+        'icon.setImageTintList(i.getId().startsWith("radio:source:mola-") ? null : iconTint);'
+    )
+    (UP / media_view).write_text(view_text, encoding="utf-8")
+
+    print("Personal Mola: 19 radio station logos installed; TV, YouTube and stable branch unchanged")
 
 
 if __name__ == "__main__":
