@@ -1,39 +1,39 @@
 #EXTM3U
-#EXTINF:-1 group-title="Radyo" tvg-name="Kral FM",Kral FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/kral_fm.png" group-title="Radyo" tvg-name="Kral FM",Kral FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1457
-#EXTINF:-1 group-title="Radyo" tvg-name="Kral Pop",Kral Pop
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/kral_pop.png" group-title="Radyo" tvg-name="Kral Pop",Kral Pop
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1456
-#EXTINF:-1 group-title="Radyo" tvg-name="Power Türk FM",Power Türk FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/power_turk_fm.png" group-title="Radyo" tvg-name="Power Türk FM",Power Türk FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1449
-#EXTINF:-1 group-title="Radyo" tvg-name="PowerTürk Slow",PowerTürk Slow
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/powerturk_slow.png" group-title="Radyo" tvg-name="PowerTürk Slow",PowerTürk Slow
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/512579
-#EXTINF:-1 group-title="Radyo" tvg-name="Süper FM",Süper FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/super_fm.png" group-title="Radyo" tvg-name="Süper FM",Süper FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/510893
-#EXTINF:-1 group-title="Radyo" tvg-name="Best FM",Best FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/best_fm.png" group-title="Radyo" tvg-name="Best FM",Best FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1534
-#EXTINF:-1 group-title="Radyo" tvg-name="JoyTürk",JoyTürk
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/joyturk.png" group-title="Radyo" tvg-name="JoyTürk",JoyTürk
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/510897
-#EXTINF:-1 group-title="Radyo" tvg-name="Joy FM",Joy FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/joy_fm.png" group-title="Radyo" tvg-name="Joy FM",Joy FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/523375
-#EXTINF:-1 group-title="Radyo" tvg-name="Alem FM",Alem FM
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/alem_fm.png" group-title="Radyo" tvg-name="Alem FM",Alem FM
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/510852
-#EXTINF:-1 group-title="Radyo" tvg-name="Show Radyo",Show Radyo
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/show_radyo.png" group-title="Radyo" tvg-name="Show Radyo",Show Radyo
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1493
-#EXTINF:-1 group-title="Radyo" tvg-name="Radyo 7",Radyo 7
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/radyo_7.png" group-title="Radyo" tvg-name="Radyo 7",Radyo 7
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1533
-#EXTINF:-1 group-title="Radyo" tvg-name="Radyo D",Radyo D
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/radyo_d.png" group-title="Radyo" tvg-name="Radyo D",Radyo D
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/510886
-#EXTINF:-1 group-title="Radyo" tvg-name="NTV Radyo",NTV Radyo
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/ntv_radyo.png" group-title="Radyo" tvg-name="NTV Radyo",NTV Radyo
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1525
-#EXTINF:-1 group-title="Radyo" tvg-name="Radyo Spor",Radyo Spor
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/radyo_spor.png" group-title="Radyo" tvg-name="Radyo Spor",Radyo Spor
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1474
-#EXTINF:-1 group-title="Radyo" tvg-name="Slow Türk",Slow Türk
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/slow_turk.png" group-title="Radyo" tvg-name="Slow Türk",Slow Türk
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1467
-#EXTINF:-1 group-title="Radyo" tvg-name="Kafa Radyo",Kafa Radyo
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/kafa_radyo.png" group-title="Radyo" tvg-name="Kafa Radyo",Kafa Radyo
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1492
-#EXTINF:-1 group-title="Radyo" tvg-name="Number One Türk",Number One Türk
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/number_one_turk.png" group-title="Radyo" tvg-name="Number One Türk",Number One Türk
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/510872
-#EXTINF:-1 group-title="Radyo" tvg-name="Radyo Voyage",Radyo Voyage
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/radyo_voyage.png" group-title="Radyo" tvg-name="Radyo Voyage",Radyo Voyage
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1468
-#EXTINF:-1 group-title="Radyo" tvg-name="Radyo Eksen",Radyo Eksen
+#EXTINF:-1 tvg-logo="https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/radyo_eksen.png" group-title="Radyo" tvg-name="Radyo Eksen",Radyo Eksen
 http://vip.felixtv.cfd:8080/kamil9734/9be15fb5/1515
