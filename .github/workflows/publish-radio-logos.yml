@@ -36,7 +36,7 @@ jobs:
               if filename not in names:
                 raise ValueError('Missing radio logo: ' + filename)
               contents = z.read(filename)
-              if not contents.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):
+              if not contents.startswith(b'\x89PNG\r\n\x1a\n'):
                 raise ValueError('Invalid PNG: ' + filename)
               (root / filename).write_bytes(contents)
           playlist = Path('iptv/radio.m3u')
@@ -47,7 +47,7 @@ jobs:
             raise ValueError(f'Expected 19 radio entries; got {len(extinf_indices)}')
           url = 'https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/'
           for i, name in zip(extinf_indices, expected):
-            line = re.sub(r'\\s+tvg-logo="[^"]*"', '', lines[i])
+            line = re.sub(r'\s+tvg-logo="[^"]*"', '', lines[i])
             line = line.replace(' group-title=', ' tvg-logo="' + url + name + '.png" group-title=', 1)
             lines[i] = line
           playlist.write_text(''.join(lines), encoding='utf-8')
