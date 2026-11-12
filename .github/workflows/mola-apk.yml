@@ -1,7 +1,7 @@
-name: Mola 19 Radyo Logolu Deneme APK
+name: Mola 19 Radyo Logo ve AA TV Fix APK
 on:
   push:
-    branches: ['feature/radyo-logolari-19']
+    branches: ['feature/mola-logolar-aa-duzeltme']
   workflow_dispatch:
 
 permissions:
@@ -58,7 +58,8 @@ jobs:
       - name: APK derle
         working-directory: personal/upstream
         run: |
-          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.mola2026logos -PAPP_NAME='Mola Logolu' --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:testAutoDebugUnitTest --tests 'me.aap.fermata.media.service.VideoOutputCoordinatorTest' -PAPP_ID=me.app.mola2026combined -PAPP_NAME='Mola Birlesik' --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.mola2026combined -PAPP_NAME='Mola Birlesik' --no-daemon --stacktrace --console=plain
 
       - name: Yalniz medya listesi ve sade ana ekran degisikliklerini denetle
         working-directory: personal/upstream
@@ -68,12 +69,12 @@ jobs:
           changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
           if not changed:
               raise SystemExit("Kaynak degisiklikleri yok")
-          allowed_ui = {"fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardFragment.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java", "fermata/src/main/res/layout/phone_open_on_car_strip.xml", "fermata/src/main/java/me/aap/fermata/ui/view/MediaItemView.java"}
-          bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/", "fermata/src/main/res/drawable-nodpi/mola_")) and p not in allowed_ui]
+          allowed_ui = {"fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardFragment.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java", "fermata/src/main/res/layout/phone_open_on_car_strip.xml", "fermata/src/main/java/me/aap/fermata/ui/view/MediaItemView.java", "fermata/src/main/java/me/aap/fermata/ui/view/VideoView.java", "fermata/src/main/java/me/aap/fermata/media/service/VideoOutputCoordinator.java", "fermata/src/main/java/me/aap/fermata/auto/OpenOnCarMediaRouting.java", "fermata/src/auto/java/me/app/fermatax/auto/MainCarActivity.java", "fermata/src/test/java/me/aap/fermata/media/service/VideoOutputCoordinatorTest.java"}
+          bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/", "modules/vlc/", "fermata/src/main/res/drawable-nodpi/mola_")) and p not in allowed_ui]
           if bad:
               raise SystemExit("TV/radyo disinda kaynak degistirildi: " + str(bad))
           new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], text=True).splitlines()
-          extra = [p for p in new if not p.startswith(("modules/tv/", "modules/radio/", "fermata/src/main/res/drawable-nodpi/mola_"))]
+          extra = [p for p in new if not p.startswith(("modules/tv/", "modules/radio/", "modules/vlc/", "fermata/src/main/res/drawable-nodpi/mola_"))]
           if extra:
               raise SystemExit("TV/radyo disinda yeni kaynak var: " + str(extra))
           print("Dogrulandi: sade telefon basligi, esit boy Radyo karti, TV geri tusu korundu")
@@ -96,7 +97,7 @@ jobs:
       - name: APK artifactini yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Mola-19-Radyo-Logo-Deneme
+          name: Mola-Logolar-AA-TV-Duzeltme
           path: out/
           if-no-files-found: error
 
@@ -106,5 +107,5 @@ jobs:
         run: |
           set -euo pipefail
           cd personal
-          tag="mola-logo-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola - 19 Radyo Logolu ${GITHUB_SHA:0:8} ${GITHUB_SHA:0:8}" --notes "Uygulama adi ve ic baslik Mola. TV, Radyo, YouTube esit buyuk kartlar; telefonda AA bagli ve Aracta Ac satiri gizlendi. TV geri tusu duzeltmesi korundu; 54 TV, 19 radyo. 19 radyo logosu eklendi; YouTube Music eklenmedi. Farkli paket kimligi: me.app.mola2026logos.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
+          tag="mola-combined-${GITHUB_SHA:0:8}"
+          gh release create "$tag" ../out/Mola.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola - Logolar ve AA Duzeltme ${GITHUB_SHA:0:8}" --notes "Uygulama adi ve ic baslik Mola. TV, Radyo, YouTube esit buyuk kartlar; telefonda AA bagli ve Aracta Ac satiri gizlendi. TV geri tusu duzeltmesi korundu; 54 TV, 19 radyo. 19 radyo logosu ve Android Auto goruntu yuzeyi ile oturum yenileme duzeltmeleri eklendi; YouTube Music eklenmedi. Farkli paket kimligi: me.app.mola2026combined.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
