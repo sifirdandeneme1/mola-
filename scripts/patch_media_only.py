@@ -267,7 +267,200 @@ def main():
     )
     (UP / media_view).write_text(view_text, encoding="utf-8")
 
-    print("Personal Mola: 19 radio station logos installed; TV, YouTube and stable branch unchanged")
+    # Android Auto video output: the video Surface is the decoder's required
+    # output. The optional subtitle Surface must not tear down the decoder.
+    video_view = "fermata/src/main/java/me/aap/fermata/ui/view/VideoView.java"
+    replace(
+        video_view,
+        "private FutureSupplier<?> createSurface = new Promise<>();",
+        "private FutureSupplier<?> createSurface = new Promise<>();\n"
+        "\tprivate long videoSurfaceRegistrationGeneration;"
+    )
+    old_callbacks = (
+        "\t@Override\n"
+        "\tpublic void surfaceCreated(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\tif ((video == null) || !video.getHolder().getSurface().isValid()) return;\n"
+        "\t\tSurfaceView s = getSubtitleSurface();\n"
+        "\t\tif ((s != null) && !s.getHolder().getSurface().isValid()) return;\n"
+        "\t\tgetActivity().onSuccess(a -> {\n"
+        "\t\t\tvar host = a.isCarActivityNotMirror() ?\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION :\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.PHONE;\n"
+        "\t\t\tlong lease = (host == me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION) ?\n"
+        "\t\t\t\t\tme.aap.fermata.auto.AutomotiveNavigationController.get().captureSourceToken(0)\n"
+        "\t\t\t\t\t\t\t.registrationGeneration() : Long.MIN_VALUE;\n"
+        "\t\t\ta.getMediaSessionCallback().getVideoOutputCoordinator().add(this,\n"
+        "\t\t\t\t\ta.isCarActivityNotMirror() ? 0 : 1, host, lease);\n"
+        "\t\t});\n"
+        "\t\tif (createSurface instanceof Promise<?> p) {\n"
+        "\t\t\tcreateSurface = completedNull();\n"
+        "\t\t\tp.complete(null);\n"
+        "\t\t}\n"
+        "\t}\n\n"
+        "\t@Override\n"
+        "\tpublic void surfaceDestroyed(@NonNull SurfaceHolder holder) {\n"
+        "\t\tinvalidateRenderMetadata();\n"
+        "\t\tsetVideoSourceLease(null);\n"
+        "\t\tcreateSurface = new Promise<>();\n"
+        "\t\tgetActivity().onSuccess(a -> a.getMediaSessionCallback().removeVideoView(this));\n"
+        "\t}\n"
+    )
+    new_callbacks = (
+        "\t@Override\n"
+        "\tpublic void surfaceCreated(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\t// Subtitle surface callbacks do not own the decoder's video output.\n"
+        "\t\tif ((video == null) || (holder != video.getHolder()) ||\n"
+        "\t\t\t\t!holder.getSurface().isValid()) return;\n"
+        "\t\tlong generation = ++videoSurfaceRegistrationGeneration;\n"
+        "\t\tgetActivity().onSuccess(a -> {\n"
+        "\t\t\t// Ignore delayed registration from an already destroyed Surface.\n"
+        "\t\t\tif ((generation != videoSurfaceRegistrationGeneration) ||\n"
+        "\t\t\t\t\t!holder.getSurface().isValid()) return;\n"
+        "\t\t\tvar host = a.isCarActivityNotMirror() ?\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION :\n"
+        "\t\t\t\t\tme.aap.fermata.ui.policy.RuntimeHostMode.PHONE;\n"
+        "\t\t\tlong lease = (host == me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION) ?\n"
+        "\t\t\t\t\tme.aap.fermata.auto.AutomotiveNavigationController.get().captureSourceToken(0)\n"
+        "\t\t\t\t\t\t\t.registrationGeneration() : Long.MIN_VALUE;\n"
+        "\t\t\ta.getMediaSessionCallback().getVideoOutputCoordinator().add(this,\n"
+        "\t\t\t\t\ta.isCarActivityNotMirror() ? 0 : 1, host, lease);\n"
+        "\t\t\t// Publish readiness only after the output is registered.\n"
+        "\t\t\tif (createSurface instanceof Promise<?> p) {\n"
+        "\t\t\t\tcreateSurface = completedNull();\n"
+        "\t\t\t\tp.complete(null);\n"
+        "\t\t\t}\n"
+        "\t\t});\n"
+        "\t}\n\n"
+        "\t@Override\n"
+        "\tpublic void surfaceDestroyed(@NonNull SurfaceHolder holder) {\n"
+        "\t\tSurfaceView video = getVideoSurface();\n"
+        "\t\tif ((video == null) || (holder != video.getHolder())) return;\n"
+        "\t\t++videoSurfaceRegistrationGeneration;\n"
+        "\t\tinvalidateRenderMetadata();\n"
+        "\t\tsetVideoSourceLease(null);\n"
+        "\t\tcreateSurface = new Promise<>();\n"
+        "\t\tgetActivity().onSuccess(a -> a.getMediaSessionCallback().removeVideoView(this));\n"
+        "\t}\n"
+    )
+    replace(video_view, old_callbacks, new_callbacks)
+
+    # VLC must not attach an optional subtitle holder which is not ready.
+    vlc_engine = "modules/vlc/src/main/java/me/aap/fermata/engine/vlc/VlcEngine.java"
+    replace(
+        vlc_engine,
+        "if (nativeSubtitles && (subtitleSurface != null)) {",
+        "if (nativeSubtitles && (subtitleSurface != null) &&\n"
+        "\t\t\t\t\tsubtitleSurface.getHolder().getSurface().isValid()) {"
+    )
+
+
+    # Recover the *same* Android Auto host after Activity pause/resume.
+    # Registration generations advance on each navigator register/unregister,
+    # but the VideoView Surface may remain alive. Refresh its lease so active
+    # playback and subsequent channel selections are not permanently rejected.
+    routing = "fermata/src/main/java/me/aap/fermata/auto/OpenOnCarMediaRouting.java"
+    replace(
+        routing,
+        "public boolean commit() { return committed = isCurrent(); }",
+        "public boolean commit() { return committed = isCurrent(); }\n"
+        "\t\tpublic boolean isCommitted() { return committed; }"
+    )
+    coordinator = "fermata/src/main/java/me/aap/fermata/media/service/VideoOutputCoordinator.java"
+    insert_at(
+        coordinator,
+        "\tpublic RuntimeHostMode getHost() { return requestedHost; }\n",
+        """
+    /**
+     * Refresh only a registered Surface belonging to the resumed car activity.
+     * A committed playback owner survives a transient host registration change.
+     * Pending, uncommitted requests remain rejected and must not be revived.
+     */
+    public void restoreProjectedHost(VideoView sameActivityView) {
+        var navigation = me.aap.fermata.auto.AutomotiveNavigationController.get();
+        if (!navigation.getOpenOnCarMode().isAvailable()) return;
+        long lease = navigation.captureSourceToken(0).registrationGeneration();
+        restoreProjectedHost(sameActivityView, lease,
+                () -> navigation.getOpenOnCarMode().isAvailable() &&
+                        navigation.captureSourceToken(0).registrationGeneration() == lease);
+    }
+
+    void restoreProjectedHost(VideoView sameActivityView, long lease,
+                              java.util.function.BooleanSupplier current) {
+        if (requestedHost != RuntimeHostMode.AA_PROJECTION) return;
+        int index = -1;
+        for (int i = 0; i < targets.size(); i++) {
+            Registration target = targets.get(i);
+            if ((target.view == sameActivityView) && (target.host == RuntimeHostMode.AA_PROJECTION)) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) return;
+        // Do not revive a request that was invalidated before playback committed.
+        if ((admission != null) && !admission.isCurrent()) {
+            if (!admission.isCommitted()) return;
+            admission = null;
+        }
+        Registration old = targets.get(index);
+        targets.set(index, new Registration(old.view, old.priority, old.order, old.host, lease));
+        requestedHostLease = lease;
+        hostCurrent = current;
+        reconcile();
+    }
+"""
+    )
+
+    car_activity = "fermata/src/auto/java/me/app/fermatax/auto/MainCarActivity.java"
+    replace(
+        car_activity,
+        "\t\tdelegateResumed = true;\n\t\td.onActivityResume();\n\t}",
+        "\t\tdelegateResumed = true;\n\t\td.onActivityResume();\n"
+        "\t\t// Rebind the active car host token even if Android preserved the Surface.\n"
+        "\t\tvar body = d.getBody();\n"
+        "\t\tif (body != null) d.getMediaSessionCallback().getVideoOutputCoordinator()\n"
+        "\t\t\t\t.restoreProjectedHost(body.getVideoView());\n"
+        "\t}"
+    )
+
+    tests = "fermata/src/test/java/me/aap/fermata/media/service/VideoOutputCoordinatorTest.java"
+    insert_at(
+        tests,
+        "public class VideoOutputCoordinatorTest {\n",
+        """
+    @Test public void retainedCarSurfaceCanRenewItsRegistrationLease() throws Exception {
+        var coordinator = new VideoOutputCoordinator();
+        var car = view();
+        var previous = view();
+        var bindings = new ArrayList<VideoView>();
+        var engine = videoEngine(bindings);
+        coordinator.add(car, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.add(previous, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 7L);
+        coordinator.bind(engine, true);
+        assertSame(car, coordinator.getSelected());
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 8L);
+        assertNull(coordinator.getSelected());
+        coordinator.restoreProjectedHost(car, 8L, () -> true);
+        assertSame(car, coordinator.getSelected());
+        assertTrue(coordinator.isBound(engine));
+        assertEquals(Arrays.asList(car, null, car), bindings);
+    }
+
+    @Test public void differentCarSurfaceCannotRenewStaleRegistration() throws Exception {
+        var coordinator = new VideoOutputCoordinator();
+        var old = view();
+        coordinator.add(old, 0, me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, 7L);
+        coordinator.selectHost(me.aap.fermata.ui.policy.RuntimeHostMode.AA_PROJECTION, () -> true, 8L);
+        coordinator.restoreProjectedHost(view(), 8L, () -> true);
+        assertNull(coordinator.getSelected());
+    }
+"""
+    )
+
+
+    print("Personal Mola: 19 radio logos plus Android Auto video/surface fixes")
 
 
 if __name__ == "__main__":
