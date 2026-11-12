@@ -156,7 +156,33 @@ def main():
         ''
     )
 
-    print("Media-only patch completed: 54 TV channels, 19 radio stations; root, AA, engine and build configuration unchanged")
+
+    # Personal front-end: keep the underlying TV, radio, YouTube and Android Auto
+    # services untouched. Change the shared dashboard and projection nav only.
+    dashboard_items = "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java"
+    dashboard_model = "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java"
+    nav_mediator = "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java"
+    replace(dashboard_items,
+        "\t\tList<Item> items = new ArrayList<>();\n\t\tfor (String name : getLayout(store, false, false, false)) {\n\t\t\tItem item = getItem(ctx, name, false);\n\t\t\tif (item != null) items.add(item);\n\t\t}\n\t\treturn items;",
+        "\t\tList<Item> items = new ArrayList<>();\n\t\tfor (String name : getLayout(store, false, false, false)) {\n\t\t\tItem item = getItem(ctx, name, false);\n\t\t\tif ((item != null) && isPersonalMediaAddon(item.addonInfo)) items.add(item);\n\t\t}\n\t\titems.sort((a, b) -> Integer.compare(personalMediaRank(a.addonInfo),\n\t\t\t\tpersonalMediaRank(b.addonInfo)));\n\t\treturn items;", 1)
+
+    replace(dashboard_items,
+        "\t\tList<NavItem> items = new ArrayList<>();\n\t\tfor (String name : getNavLayout(store)) {\n\t\t\tNavItem item = getNavItem(name);\n\t\t\tif (item != null) items.add(item);\n\t\t}\n\t\treturn items;",
+        "\t\tList<NavItem> items = new ArrayList<>();\n\t\tfor (String name : getNavLayout(store)) {\n\t\t\tif (!DASHBOARD.equals(name) && !isPersonalMediaAddon(findAddonInfo(name))) continue;\n\t\t\tNavItem item = getNavItem(name);\n\t\t\tif (item != null) items.add(item);\n\t\t}\n\t\titems.sort((a, b) -> Integer.compare(personalMediaRank(findAddonInfo(a.name)),\n\t\t\t\tpersonalMediaRank(findAddonInfo(b.name))));\n\t\treturn items;", 1)
+
+    replace(dashboard_items,
+        "\tprivate static boolean isReorderable(String name) {",
+        "\t/** Keep only the three personal media destinations visible; modules remain installed. */\n\tprivate static boolean isPersonalMediaAddon(@Nullable AddonInfo info) {\n\t\tif (info == null) return false;\n\t\treturn switch (AddonUiMetadata.role(info)) {\n\t\t\tcase TV, RADIO, YOUTUBE -> true;\n\t\t\tdefault -> false;\n\t\t};\n\t}\n\n\tprivate static int personalMediaRank(@Nullable AddonInfo info) {\n\t\tif (info == null) return -1; // Dashboard (home) stays first in the rail.\n\t\treturn switch (AddonUiMetadata.role(info)) {\n\t\t\tcase TV -> 0;\n\t\t\tcase RADIO -> 1;\n\t\t\tcase YOUTUBE -> 2;\n\t\t\tdefault -> 99;\n\t\t};\n\t}\n\n\tprivate static boolean isReorderable(String name) {", 1)
+
+    replace(dashboard_model,
+        "\tvoid rebuild(List<DashboardCard> cards, @Nullable DashboardCard smartTopCard) {\n\t\tcards.clear();\n\t\tDashboardCard visibleSmartTop = smartTopVisible ? smartTopCard : null;\n\t\tfor (DashboardItems.Item item : DashboardItems.getDashboardItems(ctx, store)) {\n\t\t\tif (shouldSuppressRecent(visibleSmartTop != null, item.id)) continue;\n\t\t\tif ((visibleSmartTop != null) && (visibleSmartTop.targetId == item.id)) continue;\n\t\t\tDashboardCard card = DashboardCard.item(item);\n\t\t\tif (automotive && (item.addonInfo != null)) card = card.withTitle(emphasizeAddonTitle(card.title));\n\t\t\tcards.add(card);\n\t\t}\n\t\tfor (DashboardItems.Item item : DashboardItems.getWebShortcutItems(ctx, store)) {\n\t\t\tcards.add(DashboardCard.item(item));\n\t\t}\n\t\tcards.add(DashboardCard.favoritesShelf(ctx));\n\t\tcards.add(DashboardCard.recentShelf(ctx));\n\t\tif (visibleSmartTop != null) cards.add(visibleSmartTop);\n\t}\n",
+        "\tvoid rebuild(List<DashboardCard> cards, @Nullable DashboardCard smartTopCard) {\n\t\tcards.clear();\n\t\t// Only TV, Radio and YouTube; no web links, mirror, favorites or recent shelves.\n\t\tfor (DashboardItems.Item item : DashboardItems.getDashboardItems(ctx, store)) {\n\t\t\tDashboardCard card = DashboardCard.item(item);\n\t\t\tif (automotive && (item.addonInfo != null)) card = card.withTitle(emphasizeAddonTitle(card.title));\n\t\t\tcards.add(card);\n\t\t}\n\t}\n", 1)
+
+    replace(nav_mediator,
+        "\t\taddVoiceButton(nb);",
+        "\t\t// Hide the optional voice-control shortcut in the personal three-item UI.", 2)
+
+    print("Personal Mola: 54 TV, 19 radio, YouTube; only three dashboard destinations; AA services untouched")
 
 
 if __name__ == "__main__":

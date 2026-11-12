@@ -1,4 +1,4 @@
-name: Mola sadece TV ve Radyo APK
+name: Mola Sade TV Radyo YouTube APK
 on:
   push:
     branches: [main]
@@ -55,9 +55,9 @@ jobs:
       - name: APK derle
         working-directory: personal/upstream
         run: |
-          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisisel --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisiselsade --no-daemon --stacktrace --console=plain
 
-      - name: Yalniz TV ve Radyo kaynaklarinin degistigini denetle
+      - name: Yalniz medya listesi ve sade ana ekran degisikliklerini denetle
         working-directory: personal/upstream
         run: |
           python3 - <<'PY'
@@ -65,14 +65,15 @@ jobs:
           changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
           if not changed:
               raise SystemExit("Kaynak degisiklikleri yok")
-          bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/"))]
+          allowed_ui = {"fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java"}
+          bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/")) and p not in allowed_ui]
           if bad:
               raise SystemExit("TV/radyo disinda kaynak degistirildi: " + str(bad))
           new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], text=True).splitlines()
           extra = [p for p in new if not p.startswith(("modules/tv/", "modules/radio/"))]
           if extra:
               raise SystemExit("TV/radyo disinda yeni kaynak var: " + str(extra))
-          print("Dogrulandi: TV ve radyo disindaki kaynak dosyalari orijinal")
+          print("Dogrulandi: sadece TV/radyo kaynaklari ve 3 sade ana ekran sinifi degistirildi")
           print("Degisen dosyalar:", changed)
           print("Yeni medya listeleri:", new)
           PY
@@ -85,14 +86,14 @@ jobs:
           find fermata/build/outputs -type f -name '*universal.apk' -print
           apk="$(find fermata/build/outputs -type f -name '*universal.apk' | head -n 1)"
           test -n "$apk"
-          cp "$apk" ../../out/Mola-TV-Radyo-test.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-TV-Radyo-test.apk
-          (cd ../../out && sha256sum Mola-TV-Radyo-test.apk > sha256.txt)
+          cp "$apk" ../../out/Mola-Sade-TV-Radyo-YouTube.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-Sade-TV-Radyo-YouTube.apk
+          (cd ../../out && sha256sum Mola-Sade-TV-Radyo-YouTube.apk > sha256.txt)
 
       - name: APK artifactini yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Mola-TV-Radyo-test
+          name: Mola-Sade-TV-Radyo-YouTube
           path: out/
           if-no-files-found: error
 
@@ -102,5 +103,5 @@ jobs:
         run: |
           set -euo pipefail
           cd personal
-          tag="test-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola-TV-Radyo-test.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola TV Radyo Kaynak Testi ${GITHUB_SHA:0:8}" --notes "Yalniz 54 TV ve 19 radyo kaynaklari degistirildi. Android Auto, root, oynatici ve kurulum kaynaklari aynen korundu. Orijinal GitHub v4.1.10 etiketi 2.2.2 kaynak commitine isaret eder; bu derleme 4.1.10 APKsinin aynisi degildir."
+          tag="sade-${GITHUB_SHA:0:8}"
+          gh release create "$tag" ../out/Mola-Sade-TV-Radyo-YouTube.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Sade TV Radyo YouTube ${GITHUB_SHA:0:8}" --notes "54 TV, 19 radyo ve YouTube gorunur. Diger kartlar ve ek gezinme ogeleri gizli; altyapi silinmedi. Farkli paket kimligi: me.app.molakisiselsade.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
