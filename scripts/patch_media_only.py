@@ -188,7 +188,7 @@ def main():
     tv_fragment = "modules/tv/src/main/java/me/aap/fermata/addon/tv/TvFragment.java"
     replace(tv_fragment,
         "\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {",
-        "\t@Override\n\tpublic boolean onBackPressed() {\n\t\tMainActivityDelegate activity = getMainActivity();\n\t\tvar body = activity.getBody();\n\t\tif (body.isVideoMode() || body.isBothMode()) {\n\t\t\t// First Back exits TV playback entirely, not just fullscreen/split mode.\n\t\t\t// Keep the current TV category selected, so the next Back navigates normally.\n\t\t\tactivity.getMediaSessionCallback().onStop();\n\t\t\tbody.setMode(me.aap.fermata.ui.view.BodyLayout.Mode.FRAME);\n\t\t\treturn true;\n\t\t}\n\t\treturn super.onBackPressed();\n\t}\n\n\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {")
+        "\t@Override\n\tpublic boolean onBackPressed() {\n\t\tMainActivityDelegate activity = getMainActivity();\n\t\tif (activity.isVideoMode()) {\n\t\t\t// Stop the TV stream before returning to the current channel list.\n\t\t\t// Leave the selected category unchanged for the next Back press.\n\t\t\tactivity.getMediaSessionCallback().onStop();\n\t\t\tme.aap.fermata.ui.view.VideoPresentationController.showFrame(activity);\n\t\t\treturn true;\n\t\t}\n\t\treturn super.onBackPressed();\n\t}\n\n\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {")
 
     print("Personal Mola: TV Back now stops stream and returns to category list; radio and YouTube untouched")
 
