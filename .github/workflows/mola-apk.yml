@@ -55,7 +55,7 @@ jobs:
       - name: APK derle
         working-directory: personal/upstream
         run: |
-          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisiselsade --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molakisiselsade -PAPP_NAME='Mola Sade' --no-daemon --stacktrace --console=plain
 
       - name: Yalniz medya listesi ve sade ana ekran degisikliklerini denetle
         working-directory: personal/upstream
