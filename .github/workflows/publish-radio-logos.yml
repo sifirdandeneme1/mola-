@@ -1,0 +1,63 @@
+name: Extract 19 radio logos and update playlist
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-radio-logos.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Extract validated radio logos and update M3U
+        shell: python
+        run: |
+          from pathlib import Path
+          from zipfile import ZipFile
+          import re
+          expected = [
+            'kral_fm', 'kral_pop', 'power_turk_fm', 'powerturk_slow',
+            'super_fm', 'best_fm', 'joyturk', 'joy_fm', 'alem_fm',
+            'show_radyo', 'radyo_7', 'radyo_d', 'ntv_radyo', 'radyo_spor',
+            'slow_turk', 'kafa_radyo', 'number_one_turk', 'radyo_voyage', 'radyo_eksen'
+          ]
+          root = Path('Radyo Logoları')
+          root.mkdir(exist_ok=True)
+          with ZipFile('assets/radio_logos.zip') as z:
+            names = set(z.namelist())
+            for name in expected:
+              filename = name + '.png'
+              if filename not in names:
+                raise ValueError('Missing radio logo: ' + filename)
+              contents = z.read(filename)
+              if not contents.startswith(b'\\x89PNG\\r\\n\\x1a\\n'):
+                raise ValueError('Invalid PNG: ' + filename)
+              (root / filename).write_bytes(contents)
+          playlist = Path('iptv/radio.m3u')
+          contents = playlist.read_text(encoding='utf-8')
+          lines = contents.splitlines(keepends=True)
+          extinf_indices = [i for i, line in enumerate(lines) if line.startswith('#EXTINF:')]
+          if len(extinf_indices) != len(expected):
+            raise ValueError(f'Expected 19 radio entries; got {len(extinf_indices)}')
+          url = 'https://raw.githubusercontent.com/sifirdandeneme1/mola-/main/Radyo%20Logolar%C4%B1/'
+          for i, name in zip(extinf_indices, expected):
+            line = re.sub(r'\\s+tvg-logo="[^"]*"', '', lines[i])
+            line = line.replace(' group-title=', ' tvg-logo="' + url + name + '.png" group-title=', 1)
+            lines[i] = line
+          playlist.write_text(''.join(lines), encoding='utf-8')
+          print(f'Validated {len(expected)} radio logos and updated playlist')
+      - name: Commit only radio logos and radio playlist
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'Radyo Logoları' iptv/radio.m3u
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish 19 radio logos and link radio playlist"
+            git push
+          fi
