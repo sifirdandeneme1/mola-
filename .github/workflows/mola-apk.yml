@@ -1,7 +1,7 @@
 name: Mola Uc Buyuk Kart Ve Sade Baslik APK
 on:
   push:
-    branches: [main, 'feature/radyo-logolari-19']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -93,7 +93,7 @@ jobs:
       - name: APK artifactini yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Mola-Radyo-Logo-Deneme
+          name: Mola-Sade-Ekran
           path: out/
           if-no-files-found: error
 
@@ -103,5 +103,5 @@ jobs:
         run: |
           set -euo pipefail
           cd personal
-          tag="mola-logo-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola - Radyo Logo Dal Denemesi ${GITHUB_SHA:0:8}" --notes "Uygulama adi ve ic baslik Mola. TV, Radyo, YouTube esit buyuk kartlar; telefonda AA bagli ve Aracta Ac satiri gizlendi. TV geri tusu duzeltmesi korundu; 54 TV, 19 radyo. Logo ve YouTube Music eklenmedi. Farkli paket kimligi: me.app.mola2026sade.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
+          tag="mola-ui-${GITHUB_SHA:0:8}"
+          gh release create "$tag" ../out/Mola.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola - 3 Buyuk Kart ve Temiz Baslik ${GITHUB_SHA:0:8}" --notes "Uygulama adi ve ic baslik Mola. TV, Radyo, YouTube esit buyuk kartlar; telefonda AA bagli ve Aracta Ac satiri gizlendi. TV geri tusu duzeltmesi korundu; 54 TV, 19 radyo. Logo ve YouTube Music eklenmedi. Farkli paket kimligi: me.app.mola2026sade.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
