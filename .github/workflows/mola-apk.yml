@@ -55,7 +55,8 @@ jobs:
       - name: APK derle
         working-directory: personal/upstream
         run: |
-          bash gradlew :fermata:testAutoDebugUnitTest :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.mola2026aafix -PAPP_NAME='Mola AA Fix' --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:testAutoDebugUnitTest --tests 'me.aap.fermata.media.service.VideoOutputCoordinatorTest' -PAPP_ID=me.app.mola2026aafix -PAPP_NAME='Mola AA Fix' --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.mola2026aafix -PAPP_NAME='Mola AA Fix' --no-daemon --stacktrace --console=plain
 
       - name: Yalniz medya listesi ve sade ana ekran degisikliklerini denetle
         working-directory: personal/upstream
