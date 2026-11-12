@@ -190,7 +190,32 @@ def main():
         "\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {",
         "\t@Override\n\tpublic boolean onBackPressed() {\n\t\tMainActivityDelegate activity = getMainActivity();\n\t\tif (activity.isVideoMode()) {\n\t\t\t// Stop the TV stream before returning to the current channel list.\n\t\t\t// Leave the selected category unchanged for the next Back press.\n\t\t\tactivity.getMediaSessionCallback().onStop();\n\t\t\tme.aap.fermata.ui.view.VideoPresentationController.showFrame(activity);\n\t\t\treturn true;\n\t\t}\n\t\treturn super.onBackPressed();\n\t}\n\n\t@Override\n\tpublic FloatingButton.Mediator getFloatingButtonMediator() {")
 
-    print("Personal Mola: TV Back now stops stream and returns to category list; radio and YouTube untouched")
+
+    # Three equal large home cards: TV, Radio, YouTube.
+    dashboard_fragment = "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardFragment.java"
+    replace(
+        dashboard_fragment,
+        'return (role == AddonUiMetadata.Role.TV) || (role == AddonUiMetadata.Role.YOUTUBE);',
+        'return (role == AddonUiMetadata.Role.TV) || (role == AddonUiMetadata.Role.YOUTUBE) ||\n'
+        '\t\t\t\t(role == AddonUiMetadata.Role.RADIO);'
+    )
+
+    # Remove phone-only AA status and "Open on car" row without deleting its
+    # views; the existing controller still needs those IDs. Media controls stay.
+    phone_strip = "fermata/src/main/res/layout/phone_open_on_car_strip.xml"
+    replace(phone_strip, 'android:layout_height="228dp"', 'android:layout_height="200dp"')
+    replace(
+        phone_strip,
+        'android:id="@+id/phone_header_utility"\n'
+        '        android:layout_width="0dp"\n'
+        '        android:layout_height="28dp"',
+        'android:id="@+id/phone_header_utility"\n'
+        '        android:layout_width="0dp"\n'
+        '        android:layout_height="28dp"\n'
+        '        android:visibility="gone"'
+    )
+
+    print("Personal Mola: 3 equal hero cards, clean phone header, TV Back retained; no logo or YouTube Music changes")
 
 
 if __name__ == "__main__":

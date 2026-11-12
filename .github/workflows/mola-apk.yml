@@ -1,4 +1,4 @@
-name: Mola TV Geri Tus Duzeltmesi APK
+name: Mola Uc Buyuk Kart Ve Sade Baslik APK
 on:
   push:
     branches: [main]
@@ -55,7 +55,7 @@ jobs:
       - name: APK derle
         working-directory: personal/upstream
         run: |
-          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.molatvgeri -PAPP_NAME='Mola TV Geri' --no-daemon --stacktrace --console=plain
+          bash gradlew :fermata:packageAutoDebugUniversalApk -PAPP_ID=me.app.mola2026sade -PAPP_NAME='Mola' --no-daemon --stacktrace --console=plain
 
       - name: Yalniz medya listesi ve sade ana ekran degisikliklerini denetle
         working-directory: personal/upstream
@@ -65,7 +65,7 @@ jobs:
           changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
           if not changed:
               raise SystemExit("Kaynak degisiklikleri yok")
-          allowed_ui = {"fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java"}
+          allowed_ui = {"fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardItems.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardModelBuilder.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/DashboardFragment.java", "fermata/src/main/java/me/aap/fermata/ui/fragment/NavBarMediator.java", "fermata/src/main/res/layout/phone_open_on_car_strip.xml"}
           bad = [p for p in changed if not p.startswith(("modules/tv/", "modules/radio/")) and p not in allowed_ui]
           if bad:
               raise SystemExit("TV/radyo disinda kaynak degistirildi: " + str(bad))
@@ -73,7 +73,7 @@ jobs:
           extra = [p for p in new if not p.startswith(("modules/tv/", "modules/radio/"))]
           if extra:
               raise SystemExit("TV/radyo disinda yeni kaynak var: " + str(extra))
-          print("Dogrulandi: TV geri tusu, kaynak listeleri ve sade ana ekran; radyo ve YouTube gezinmesi degismedi")
+          print("Dogrulandi: sade telefon basligi, esit boy Radyo karti, TV geri tusu korundu")
           print("Degisen dosyalar:", changed)
           print("Yeni medya listeleri:", new)
           PY
@@ -86,14 +86,14 @@ jobs:
           find fermata/build/outputs -type f -name '*universal.apk' -print
           apk="$(find fermata/build/outputs -type f -name '*universal.apk' | head -n 1)"
           test -n "$apk"
-          cp "$apk" ../../out/Mola-TV-Geri-Duzeltme.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola-TV-Geri-Duzeltme.apk
-          (cd ../../out && sha256sum Mola-TV-Geri-Duzeltme.apk > sha256.txt)
+          cp "$apk" ../../out/Mola.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs ../../out/Mola.apk
+          (cd ../../out && sha256sum Mola.apk > sha256.txt)
 
       - name: APK artifactini yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Mola-TV-Geri-Duzeltme
+          name: Mola-Sade-Ekran
           path: out/
           if-no-files-found: error
 
@@ -103,5 +103,5 @@ jobs:
         run: |
           set -euo pipefail
           cd personal
-          tag="geritv-${GITHUB_SHA:0:8}"
-          gh release create "$tag" ../out/Mola-TV-Geri-Duzeltme.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola Sade TV Radyo YouTube ${GITHUB_SHA:0:8}" --notes "TV ilk Geri: yayini durdurur ve mevcut kategori kanal listesine doner. Ikinci Geri: ust kategoriye doner. 54 TV, 19 radyo ve YouTube; diger arayuz ve logolar degismedi. Farkli paket kimligi: me.app.molatvgeri.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
+          tag="mola-ui-${GITHUB_SHA:0:8}"
+          gh release create "$tag" ../out/Mola.apk ../out/sha256.txt --target "$GITHUB_SHA" --prerelease --title "Mola - 3 Buyuk Kart ve Temiz Baslik ${GITHUB_SHA:0:8}" --notes "Uygulama adi ve ic baslik Mola. TV, Radyo, YouTube esit buyuk kartlar; telefonda AA bagli ve Aracta Ac satiri gizlendi. TV geri tusu duzeltmesi korundu; 54 TV, 19 radyo. Logo ve YouTube Music eklenmedi. Farkli paket kimligi: me.app.mola2026sade.auto.debug. Orijinal Mola ve onceki calisan test APKsi korunur. Android Auto gorunurlugu icin KingInstaller Classic ile kurup aracta test edin."
