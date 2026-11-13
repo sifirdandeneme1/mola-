@@ -1,0 +1,59 @@
+name: Mola 4.1.10 - Web Hidden and Radio Logos (TEST)
+
+on:
+  push:
+    branches: [experiment/mola-4-1-10-apk]
+    paths:
+      - experiments/mola-4.1.10/patch_4_1_10.py
+      - .github/workflows/mola-4-1-10-patch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  patch-original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install APK editing and signing tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y apktool apksigner zipalign
+          apktool --version
+          apksigner --version
+          zipalign -h | head -2 || true
+      - name: Fetch exact ORIGINAL v4.1.10
+        run: |
+          curl -fL --retry 3 --retry-delay 3 -o original.apk 'https://github.com/moris545454/araba-/releases/download/v4.1.10/Mola-4.1.10-dagitim.apk'
+          echo 'b047fb12b9ff96f39fa4dda398ecf3ba0a9886089782c702406d434399ed92ba  original.apk' | sha256sum -c -
+          test "$(wc -c < original.apk)" -eq 124527834
+      - name: Decode original DEX with apktool
+        run: apktool d -f -r original.apk -o decoded
+      - name: Apply precisely scoped edits
+        run: |
+          python3 experiments/mola-4.1.10/patch_4_1_10.py decoded
+          grep -F 'MolaCustomLogos;->find' decoded/smali*/me/aap/fermata/addon/radio/RadioStageView.smali
+          grep -F 'me.aap.fermata.addon.web.WebBrowserAddon' decoded/smali*/me/aap/fermata/ui/fragment/DashboardItems.smali
+      - name: Reassemble decoded APK with apktool
+        run: |
+          apktool b decoded -o patched-unsigned.apk
+          zipalign -f -p 4 patched-unsigned.apk Mola-4.1.10-web-gizli-19-radyo-logo-aligned.apk
+      - name: Sign test build with ephemeral signing key
+        env:
+          SIGN_PASS: ${{ github.run_id }}
+        run: |
+          keytool -genkeypair -noprompt -keystore /tmp/mola-test.jks -storepass "test${SIGN_PASS}" -keypass "test${SIGN_PASS}" -alias mola-test -keyalg RSA -keysize 2048 -validity 90 -dname 'CN=Mola-4.1.10-Test,O=Local,C=TR'
+          apksigner sign --ks /tmp/mola-test.jks --ks-key-alias mola-test --ks-pass "pass:test${SIGN_PASS}" --key-pass "pass:test${SIGN_PASS}" --out Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST.apk Mola-4.1.10-web-gizli-19-radyo-logo-aligned.apk
+          apksigner verify --verbose Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST.apk
+          sha256sum Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST.apk > SHA256.txt
+          unzip -t Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST.apk | tail -1
+      - name: Upload the signed TEST APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST
+          path: |
+            Mola-4.1.10-Web-Gizli-Radyo-Logolu-TEST.apk
+            SHA256.txt
+          retention-days: 14
