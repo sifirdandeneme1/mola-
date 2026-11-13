@@ -1,0 +1,57 @@
+name: Mola 4.1.10 APK code inspection
+
+on:
+  push:
+    branches: [experiment/mola-4-1-10-apk]
+    paths: [.github/workflows/mola-4-1-10-inspect.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-original-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DEX disassembly tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y apktool unzip
+          apktool --version
+      - name: Download ORIGINAL publicly released APK and verify uploaded file fingerprint
+        run: |
+          curl -fL --retry 3 --retry-delay 3 -o mola-original.apk 'https://github.com/moris545454/araba-/releases/download/v4.1.10/Mola-4.1.10-dagitim.apk'
+          echo 'b047fb12b9ff96f39fa4dda398ecf3ba0a9886089782c702406d434399ed92ba  mola-original.apk' | sha256sum -c -
+          test "$(wc -c < mola-original.apk)" -eq 124527834
+          unzip -t mola-original.apk | tail -1
+      - name: Disassemble ONLY, do not mutate APK
+        run: |
+          apktool d -f -r mola-original.apk -o decoded
+      - name: Extract relevant methods and diagnostics
+        run: |
+          mkdir -p inspection/smali
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          names = ['DashboardItems','AddonUiMetadata','RadioStageView','RadioSourceItem','RadioStationItem','RadioBrowserStation']
+          roots = list(Path('decoded').glob('smali*'))
+          found = {}
+          for name in names:
+              paths = [p for root in roots for p in root.rglob(name + '.smali')]
+              found[name] = [str(p) for p in paths]
+              for p in paths:
+                  shutil.copyfile(p,Path('inspection/smali')/(p.parent.name+'_'+name+'.smali'))
+          Path('inspection/paths.txt').write_text('\n'.join(f'{k}: {v}' for k,v in found.items())+'\n')
+          if any(not value for value in found.values()):
+              raise SystemExit('Some expected 4.1.10 classes were not found. See paths.txt.')
+          PY
+          sha256sum mola-original.apk > inspection/original.sha256
+          find inspection -type f -printf '%P %s bytes\n' | sort
+      - name: Upload private-to-run inspection artifacts (no APK or subscriptions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mola-4.1.10-target-smali
+          path: inspection/
+          retention-days: 7
